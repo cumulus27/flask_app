@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="URL_LOGIN">https://kayanoai.herokuapp.com/app/v1/login/</string>
+    <string name="URL_REGISTER">https://kayanoai.herokuapp.com/mobile/register/</string>
+    <string name="URL_TEST">https://kayanoai.herokuapp.com/app/v1/test/</string>
+</resources>

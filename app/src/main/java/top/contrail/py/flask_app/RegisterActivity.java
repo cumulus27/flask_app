@@ -3,6 +3,7 @@ package top.contrail.py.flask_app;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -19,6 +20,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -29,8 +32,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.android.volley.Cache;
+import com.android.volley.Network;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.BasicNetwork;
+import com.android.volley.toolbox.DiskBasedCache;
+import com.android.volley.toolbox.HurlStack;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -43,6 +58,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
+    private static final String TAG = "RegisterActivity";
 
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -58,7 +74,9 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 
     // UI references.
     private AutoCompleteTextView mEmailView;
+    private AutoCompleteTextView mUsername;
     private EditText mPasswordView;
+
     private View mProgressView;
     private View mLoginFormView;
 
@@ -68,6 +86,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
         setContentView(R.layout.activity_register);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mUsername = (AutoCompleteTextView) findViewById(R.id.username);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -103,14 +122,24 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
     }
 
     private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
+
         if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
             return true;
         }
         if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
             Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+                    .setAction(android.R.string.ok, new View.OnClickListener() {
+                        @Override
+                        @TargetApi(Build.VERSION_CODES.M)
+                        public void onClick(View v) {
+                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+                        }
+                    });
+        } else {
+            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
+        }
+        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
+            Snackbar.make(mUsername, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
                     .setAction(android.R.string.ok, new View.OnClickListener() {
                         @Override
                         @TargetApi(Build.VERSION_CODES.M)
@@ -150,10 +179,12 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 
         // Reset errors.
         mEmailView.setError(null);
+        mUsername.setError(null);
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
+        String username = mUsername.getText().toString();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -177,6 +208,17 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             cancel = true;
         }
 
+        // Check for a valid username.
+        if (TextUtils.isEmpty(username)) {
+            mUsername.setError(getString(R.string.error_field_required));
+            focusView = mUsername;
+            cancel = true;
+        } else if (!isUsernameValid(username)) {
+            mUsername.setError(getString(R.string.error_invalid_username));
+            focusView = mUsername;
+            cancel = true;
+        }
+
         if (cancel) {
             // There was an error; don't attempt login and focus the first
             // form field with an error.
@@ -185,7 +227,7 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(email, username, password);
             mAuthTask.execute((Void) null);
         }
     }
@@ -193,6 +235,11 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
         return email.contains("@");
+    }
+
+    private boolean isUsernameValid(String username) {
+        //TODO: Replace this with your own logic
+        return true;
     }
 
     private boolean isPasswordValid(String password) {
@@ -298,33 +345,83 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 
         private final String mEmail;
         private final String mPassword;
+        private final String mUsername;
 
-        UserLoginTask(String email, String password) {
+        UserLoginTask(String email, String username, String password) {
             mEmail = email;
             mPassword = password;
+            mUsername = username;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
             // TODO: attempt authentication against a network service.
+            final RequestQueue requestQueue;
 
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+            // Instantiate the cache
+            Cache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
+
+            // Set up the network to use HttpURLConnection as the HTTP client.
+            Network network = new BasicNetwork(new HurlStack());
+
+            // Instantiate the RequestQueue with the cache and network.
+            requestQueue = new RequestQueue(cache, network);
+
+            // Start the queue
+            requestQueue.start();
+
+            String url = getResources().getString(R.string.URL_REGISTER);
+
+            JSONObject data = new JSONObject();
+            try{
+                data.put("email", mEmail);
+                data.put("username", mUsername);
+                data.put("password", mPassword);
+            }catch (JSONException e){
+                Log.e(TAG, "Set register data error.");
+                Log.e(TAG, e.toString());
             }
+            Log.d(TAG, data.toString());
 
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
+//            Map<String, String> data = new HashMap<String, String>();
+//            data.put("email", mEmail);
+//            data.put("username", mUsername);
+//            data.put("password", mPassword);
+//            Log.d(TAG, data.toString());
+
+            String auth = "";
+
+            VolleyRequest request = new VolleyRequest();
+            request.set_parameter(url, requestQueue, auth, data);
+
+            VolleyRequest result_task = request.send_post_request();
+
+            while (result_task.get_response() == null){
+                try{
+                    Thread.sleep(200);
+                }catch (InterruptedException e){
+                    Log.e(TAG, e.toString());
+                }
+
+                try{
+                    Log.d(TAG, result_task.get_response().toString());
+                }catch(NullPointerException e){
+                    Log.d(TAG, "Null response");
                 }
             }
 
-            // TODO: register the new account here.
-            return true;
+            JSONObject response = result_task.get_response();
+
+            String state;
+            try{
+                state = response.getString("state").trim();
+            }catch (JSONException e){
+                state = "failed";
+                Log.d(TAG, "Can't get the state. " + e.toString());
+            }
+
+            return (state.equals("success"));
+
         }
 
         @Override
@@ -333,10 +430,13 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             showProgress(false);
 
             if (success) {
+                Intent intent = new Intent();
+                intent.setClass(RegisterActivity.this, LoginActivity.class);
+                startActivity(intent);
                 finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+                mEmailView.setError(getString(R.string.error_register));
+                mEmailView.requestFocus();
             }
         }
 

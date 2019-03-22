@@ -8,13 +8,17 @@
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">This password is too short</string>
+    <string name="error_invalid_username">This username is invalid</string>
     <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_register">Register failed</string>
     <string name="error_field_required">This field is required</string>
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
     <string name="title_activity_register">register</string>
+    <string name="title_activity_home">home</string>
     <string name="action_register">Register</string>
-    <string name="action_test">Connect Test</string>
+    <string name="action_test">Login Test</string>
+    <string name="action_logout">Logout</string>
     <string name="default_text"> </string>
 </resources>

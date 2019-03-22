@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="DEFAULT_USER">497827216@qq.com</string>
+    <string name="DEFAULT_PASSWORD">123456790</string>
+
+    <string name="REGISTER_EMAIL">zhaopy27@gmail.com</string>
+    <string name="REGISTER_USERNAME">zhaopy27</string>
+    <string name="REGISTER_PASSWORD">987653210</string>
+</resources>

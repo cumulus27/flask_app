@@ -3,6 +3,7 @@ package top.contrail.py.flask_app;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -37,6 +38,9 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.BasicNetwork;
 import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HurlStack;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,6 +94,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void onClick(View view) {
                 attemptLogin();
+            }
+        });
+
+        Button registerButton = (Button) findViewById(R.id.register);
+        registerButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.setClass(LoginActivity.this, RegisterActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 
@@ -307,7 +322,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
             final RequestQueue requestQueue;
 
             // Instantiate the cache
@@ -325,23 +339,47 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             String url = getResources().getString(R.string.URL_LOGIN);
 
             String auth_text = String.format("%s:%s", mEmail, mPassword);
+            Log.d(TAG, auth_text);
             String auth = Base64.encodeToString(auth_text.getBytes(), Base64.DEFAULT);
 
 
             VolleyRequest request = new VolleyRequest();
-            request.set_parameter(url, requestQueue);
+            request.set_parameter(url, requestQueue, auth);
 
-            VolleyRequest result_task = request.send_get_request();
+            VolleyRequest result_task = request.send_post_request();
 
             while (result_task.get_response() == null){
                 try{
-                    Thread.sleep(1000);
+                    Thread.sleep(200);
                 }catch (InterruptedException e){
                     Log.e(TAG, e.toString());
                 }
+
+                try{
+                    Log.d(TAG, result_task.get_response().toString());
+                }catch(NullPointerException e){
+                    Log.d(TAG, "Null response");
+                }
             }
 
-            return true;
+            JSONObject response = result_task.get_response();
+
+            String state;
+            String token = "";
+            String username = "";
+            try{
+                state = response.getString("state").trim();
+                token = response.getString("token").trim();
+                username = response.getString("username").trim();
+            }catch (JSONException e){
+                state = "failed";
+                Log.d(TAG, "Can't get the state. " + e.toString());
+            }
+
+            MyApplication.getInstance().setToken(token);
+            MyApplication.getInstance().setUsername(username);
+
+            return (state.equals("success"));
         }
 
         @Override
@@ -350,6 +388,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
+                Intent intent = new Intent();
+                intent.setClass(LoginActivity.this, HomeActivity.class);
+                startActivity(intent);
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));

@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -31,6 +32,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Cache;
 import com.android.volley.Network;
@@ -70,6 +72,28 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mLoginFormView;
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        String return_data = "There is no data return.";
+        try{
+            return_data = data.getStringExtra("data_return");
+        }catch (NullPointerException e){
+            Log.e(TAG, "No data return.");
+            Log.e(TAG, e.toString());
+        }
+
+        switch (requestCode){
+            case 1:
+                if (resultCode == RESULT_OK){
+                    Log.d(TAG, "Success register.");
+                    Toast.makeText(this, return_data, Toast.LENGTH_SHORT).show();
+                }else {
+                    Log.d(TAG, "Failed register.");
+                    Toast.makeText(this, return_data, Toast.LENGTH_SHORT).show();
+                }
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
@@ -103,8 +127,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             public void onClick(View view) {
                 Intent intent = new Intent();
                 intent.setClass(LoginActivity.this, RegisterActivity.class);
-                startActivity(intent);
-                finish();
+                startActivityForResult(intent, 1);
             }
         });
 

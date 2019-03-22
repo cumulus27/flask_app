@@ -109,6 +109,17 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
             }
         });
 
+        Button mBackButton = (Button) findViewById(R.id.back_to_login);
+        mBackButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.putExtra("data_return", "Cancel the register by user.");
+                setResult(RESULT_CANCELED, intent);
+                finish();
+            }
+        });
+
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
     }
@@ -431,8 +442,8 @@ public class RegisterActivity extends AppCompatActivity implements LoaderCallbac
 
             if (success) {
                 Intent intent = new Intent();
-                intent.setClass(RegisterActivity.this, LoginActivity.class);
-                startActivity(intent);
+                intent.putExtra("data_return", "Success register.");
+                setResult(RESULT_OK, intent);
                 finish();
             } else {
                 mEmailView.setError(getString(R.string.error_register));

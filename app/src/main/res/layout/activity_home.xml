@@ -18,20 +18,22 @@
 
     <Button
         android:id="@+id/login_test"
-        android:layout_width="wrap_content"
+        android:layout_width="110dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="72dp"
-        android:layout_marginBottom="124dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="96dp"
         android:text="@string/action_test"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <Button
-        android:id="@+id/logout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="60dp"
-        android:text="@string/action_logout"
-        app:layout_constraintStart_toEndOf="@+id/login_test"
-        app:layout_constraintTop_toTopOf="@+id/login_test" />
+    <!--<Button-->
+        <!--android:id="@+id/logout"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginStart="60dp"-->
+        <!--android:text="@string/action_logout"-->
+        <!--app:layout_constraintStart_toEndOf="@+id/login_test"-->
+        <!--app:layout_constraintTop_toTopOf="@+id/login_test" />-->
 </android.support.constraint.ConstraintLayout>

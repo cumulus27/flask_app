@@ -69,6 +69,16 @@ class VolleyRequest {
         this.has_handler = true;
     }
 
+    void set_parameter(String url, RequestQueue queue, String auth, JSONObject data, Handler handler){
+
+        this.base_url = url;
+        this.queue = queue;
+        this.auth = auth;
+        this.data = data;
+        this.handler = handler;
+        this.has_handler = true;
+    }
+
     VolleyRequest send_get_request(){
 
         String url = this.base_url;

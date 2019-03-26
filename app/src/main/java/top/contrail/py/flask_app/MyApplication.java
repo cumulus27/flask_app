@@ -21,6 +21,7 @@ public class MyApplication extends Application {
 
     private String username = "";
     private String token = "";
+    private String recent_data_url = "/app/v1/data/1";
 
     public String getUsername() {
         return username;
@@ -41,6 +42,15 @@ public class MyApplication extends Application {
         Log.d(TAG, auth_text);
         this.token = Base64.encodeToString(auth_text.getBytes(), Base64.NO_WRAP);
         Log.d(TAG, this.token);
+    }
+
+    public String getDataUrl() {
+        return recent_data_url;
+    }
+
+    public void setDataUrl(String url) {
+        this.recent_data_url = url;
+        Log.d(TAG, this.recent_data_url);
     }
 
 }

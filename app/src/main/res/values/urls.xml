@@ -3,4 +3,6 @@
     <string name="URL_LOGIN">https://kayanoai.herokuapp.com/app/v1/login/</string>
     <string name="URL_REGISTER">https://kayanoai.herokuapp.com/mobile/register/</string>
     <string name="URL_TEST">https://kayanoai.herokuapp.com/app/v1/test/</string>
+    <string name="URL_DATA">https://kayanoai.herokuapp.com/app/v1/data/</string>
+    <string name="URL_BASE">https://kayanoai.herokuapp.com</string>
 </resources>

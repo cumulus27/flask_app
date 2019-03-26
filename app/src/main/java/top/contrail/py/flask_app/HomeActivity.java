@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,9 +26,14 @@ import com.android.volley.toolbox.HurlStack;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Iterator;
+
 public class HomeActivity extends AppCompatActivity {
 
     Button get=null;
+    Button data_post=null;
+    Button data_get=null;
+    EditText data_edit=null;
     TextView content=null;
     private static final String TAG = "HomeActivity";
 
@@ -64,7 +70,10 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         get = (Button) findViewById(R.id.login_test);
+        data_post = (Button) findViewById(R.id.data_post);
+        data_get = (Button) findViewById(R.id.data_get);
         content=(TextView) findViewById(R.id.test_content);
+        data_edit=(EditText) findViewById(R.id.dataEdit);
 
         final RequestQueue requestQueue;
         // Instantiate the cache
@@ -100,6 +109,41 @@ public class HomeActivity extends AppCompatActivity {
             }
         };
 
+        final Handler data_handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                JSONObject response = (JSONObject) msg.obj;
+
+                String lines = "";
+                Iterator iterator = response.keys();
+
+                String key;
+                String value = "";
+                String line = "";
+                try{
+
+                    while(iterator.hasNext()) {
+                        key = (String) iterator.next();
+                        value = response.getString(key);
+                        line = String.format("%s: %s\n", key, value);
+                        Log.d(TAG, line);
+                        lines = lines.concat(line);
+                    }
+
+                    MyApplication.getInstance().setDataUrl(response.getString("url"));
+
+                }catch (JSONException e){
+                    Log.e(TAG, e.toString());
+                }
+
+
+                content.setText(lines);
+                Toast.makeText(HomeActivity.this, "Success.", Toast.LENGTH_SHORT).show();
+
+            }
+        };
+
         get.setOnClickListener(new View.OnClickListener() {
 
             @Override public void onClick(View v) {
@@ -110,6 +154,55 @@ public class HomeActivity extends AppCompatActivity {
 
                 VolleyRequest request = new VolleyRequest();
                 request.set_parameter(url, requestQueue, auth, login_test_handler);
+
+                VolleyRequest result_task = request.send_get_request();
+
+            }
+
+        });
+
+        data_post.setOnClickListener(new View.OnClickListener() {
+
+            @Override public void onClick(View v) {
+
+                String url = getResources().getString(R.string.URL_DATA);
+                String auth =  MyApplication.getInstance().getToken();
+                Log.d(TAG, auth);
+
+                String text = data_edit.getText().toString();
+                JSONObject data = new JSONObject();
+                try{
+                    data.put("body", text);
+                }catch (JSONException e){
+                    Log.e(TAG, "Set post data error.");
+                    Log.e(TAG, e.toString());
+                }
+                Log.d(TAG, data.toString());
+
+                VolleyRequest request = new VolleyRequest();
+                request.set_parameter(url, requestQueue, auth, data, data_handler);
+
+                VolleyRequest result_task = request.send_post_request();
+
+            }
+
+        });
+
+        data_get.setOnClickListener(new View.OnClickListener() {
+
+            @Override public void onClick(View v) {
+
+                String url_base = getResources().getString(R.string.URL_BASE);
+                String data_url = MyApplication.getInstance().getDataUrl();
+
+                String url = String.format("%s%s", url_base, data_url);
+                Log.d(TAG, url);
+
+                String auth =  MyApplication.getInstance().getToken();
+                Log.d(TAG, auth);
+
+                VolleyRequest request = new VolleyRequest();
+                request.set_parameter(url, requestQueue, auth, data_handler);
 
                 VolleyRequest result_task = request.send_get_request();
 

@@ -21,7 +21,11 @@
     <string name="action_test">Login Test</string>
     <string name="action_logout">Logout</string>
     <string name="action_back">Back</string>
+    <string name="action_post">Post</string>
+    <string name="action_get">Get</string>
     <string name="default_text"> </string>
+    <string name="default_data">This is test data to post.</string>
+    <string name="hint_text">Edit data here.</string>
 
     <string name="item_user">Username</string>
     <string name="item_logout">Logout</string>

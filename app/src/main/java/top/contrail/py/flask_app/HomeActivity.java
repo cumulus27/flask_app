@@ -121,6 +121,7 @@ public class HomeActivity extends AppCompatActivity {
                 String key;
                 String value = "";
                 String line = "";
+                String state = "failed";
                 try{
 
                     while(iterator.hasNext()) {
@@ -131,6 +132,7 @@ public class HomeActivity extends AppCompatActivity {
                         lines = lines.concat(line);
                     }
 
+                    state = response.getString("state");
                     MyApplication.getInstance().setDataUrl(response.getString("url"));
 
                 }catch (JSONException e){
@@ -139,7 +141,7 @@ public class HomeActivity extends AppCompatActivity {
 
 
                 content.setText(lines);
-                Toast.makeText(HomeActivity.this, "Success.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, state, Toast.LENGTH_SHORT).show();
 
             }
         };
